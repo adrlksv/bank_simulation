@@ -1,4 +1,5 @@
-from sqlalchemy import Integer, Numeric, ForeignKey
+from decimal import Decimal
+from sqlalchemy import Integer, Numeric, ForeignKey, DECIMAL as SQLAlchemyDecimal
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.database import Base
@@ -18,7 +19,8 @@ class Branch(Base):
         ForeignKey("bank.id"),
         nullable=False,
     )
-    balance: Mapped[float] = mapped_column(
-        Numeric(12, 2),
-        default=0,
+    balance: Mapped[Decimal] = mapped_column(
+        SQLAlchemyDecimal(12, 2),
+        default=Decimal("0.00"),
+        nullable=False,
     )

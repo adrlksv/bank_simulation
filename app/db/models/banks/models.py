@@ -1,4 +1,5 @@
-from sqlalchemy import Integer, Numeric, String
+from decimal import Decimal
+from sqlalchemy import Integer, Numeric, String, DECIMAL as SQLAlchemyDecimal
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.database import Base
@@ -17,4 +18,4 @@ class Bank(Base):
         nullable=False,
         unique=True,
     )
-    comission_income: Mapped[float] = mapped_column(Numeric(12, 2), default=0)
+    comission_income: Mapped[Decimal] = mapped_column(SQLAlchemyDecimal(12, 2), default=Decimal("0.00"), nullable=False)

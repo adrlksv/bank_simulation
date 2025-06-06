@@ -1,6 +1,9 @@
 from datetime import datetime
-from sqlalchemy import JSON, DateTime, Integer, ForeignKey, Numeric, Enum as SQLAlchemyEnum, func
+
+from sqlalchemy import JSON, DateTime, Integer, ForeignKey, Numeric, Enum as SQLAlchemyEnum, func, DECIMAL as SQLAlchemyDecimal
 from sqlalchemy.orm import Mapped, mapped_column
+
+from decimal import Decimal
 
 from enum import Enum
 
@@ -40,8 +43,8 @@ class Transaction(Base):
         ForeignKey("account.id"),
         nullable=True,
     )
-    amount: Mapped[float] = mapped_column(Numeric(12, 2))
-    fee: Mapped[float] = mapped_column(Numeric(12, 2), default=0)
+    amount: Mapped[Decimal] = mapped_column(SQLAlchemyDecimal(12, 2), nullable=False)
+    fee: Mapped[Decimal] = mapped_column(SQLAlchemyDecimal(12, 2), default=Decimal("0.00"), nullable=False)
     type: Mapped[Enum] = mapped_column(SQLAlchemyEnum(TransactionType), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default = func.now(), nullable=False)
 
@@ -52,7 +55,7 @@ class OperationLog(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     client_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("account.id"),
+        ForeignKey("client.id"),
         nullable=False,
     )
     action: Mapped[Enum] = mapped_column(SQLAlchemyEnum(OperationType), nullable=False)

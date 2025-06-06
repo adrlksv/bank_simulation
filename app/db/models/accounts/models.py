@@ -1,5 +1,12 @@
 from datetime import datetime
-from sqlalchemy import DateTime, Integer, Numeric, String, ForeignKey, Float, func
+from decimal import Decimal
+from sqlalchemy import (
+    DateTime, 
+    Integer,
+    ForeignKey,  
+    func, 
+    DECIMAL as SQLAlchemyDecimal
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.database import Base
@@ -24,6 +31,6 @@ class Account(Base):
         ForeignKey("client.id"),
         nullable=False,
     )
-    balance: Mapped[float] = mapped_column(Numeric(12, 2), default=0)
+    balance: Mapped[Decimal] = mapped_column(SQLAlchemyDecimal(12, 2), default=Decimal("0.00"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
     closed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
