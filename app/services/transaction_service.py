@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.db.models.accounts.models import Account
+from app.db.models.transactions.models import TransactionType
 
 
 class TransactionService:
@@ -26,9 +27,22 @@ class TransactionService:
         if account_from.balance < amount:
             raise ValueError("Not enough funds")
         
-        account_from -= amount
-        account_to += amount
+        is_other_bank = account_from.bank_id != account_to.bank_id
         
+        fee = (amount * Decimal("0.01")).quantize(Decimal("0.01")) if is_other_bank else Decimal("0.00")
+        
+        account_from -= amount
+        account_to += (amount - fee)
+        
+        transaction = transaction(
+            from_account_id=from_account_id,
+            to_account_id=to_account_id,
+            amount=amount,
+            fee=fee,
+            type=TransactionType.transfer,
+        )
+        
+        self.session.add(transaction)
         await self.session.commit()
         
-        return account_from, account_to
+        return transaction
