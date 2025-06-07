@@ -51,3 +51,11 @@ class AccountService:
         await self.session.commit()
         
         return account
+
+    async def get_accounts(self, client_id: int) -> list[Account]:
+        stmt = await self.session.execute(
+            select(Account)
+            .where(Account.client_id == client_id)
+        )
+        
+        return stmt.scalars().all()

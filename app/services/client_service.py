@@ -8,6 +8,8 @@ from app.db.models.clients.models import Client
 from app.db.models.accounts.models import Account
 from app.db.models.transactions.models import OperationLog, OperationType, Transaction, TransactionType
 
+from app.services.bank_service import BankService
+
 
 class ClientService:
     def __init__(self, session: AsyncSession):
@@ -143,6 +145,71 @@ class ClientService:
         self.session.add(OperationLog(
             client_id=client_id,
             action=OperationType.withdraw,
+            data={
+                "client_id": client_id,
+                "amount": str(amount),
+            }
+        ))
+        
+        await self.session.commit()
+
+    async def transfer(
+        self,
+        from_account_id: int,
+        to_account_id: int,
+        amount: Decimal,
+        client_id: int,
+        fee_percent: Decimal = Decimal("0.001")
+    ):
+        stmt_from = await self.session.execute(
+            select(Account)
+            .where(Account.id == from_account_id)
+        )
+        stmt_to = await self.session.execute(
+            select(Account)
+            .where(Account.id == to_account_id)
+        )
+        
+        from_account = stmt_from.scalar_one_or_none()
+        to_account = stmt_to.scalar_one_or_none()
+        
+        if amount <= 0:
+            raise ValueError("Amount must be greater than zero")
+        
+        if from_account is None:
+            raise ValueError(f"Client with id={from_account_id} not found")
+        
+        if to_account is None:
+            raise ValueError(f"Client with id={to_account_id} not found")
+        
+        if from_account.bank_id != to_account.bank_id:
+            fee_percent = Decimal("0.01")
+        
+        fee = amount * fee_percent
+        total_amount = amount + fee
+            
+        if total_amount > from_account.balance:
+            raise ValueError("Not enough money")
+        
+        from_account.balance -= total_amount
+        to_account.balance += amount
+        
+        bank_service = BankService(self.session)
+        bank_service.add_comission_to_bank(from_account.bank_id, fee)
+        
+        transaction = Transaction(
+            from_account_id=from_account_id,
+            to_account_id=to_account_id,
+            amount=amount,
+            fee=fee_percent,
+            type=TransactionType.transfer,
+        )
+        
+        self.session.add(transaction)
+        
+        self.session.add(OperationLog(
+            client_id=client_id,
+            action=OperationType.transfer,
             data={
                 "client_id": client_id,
                 "amount": str(amount),

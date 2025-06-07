@@ -66,6 +66,9 @@ class BankService:
         if branch is None:
             raise ValueError(f"Branch with id={branch_id} not found")
         
+        if amount <= 0:
+            raise ValueError("Amount must be greater than zero")
+        
         branch.balance += amount
         
         await self.session.commit()
@@ -107,12 +110,21 @@ class BankService:
             .where(Branch.bank_id == bank_id)
         )
         
-        braanch_count = result.scalar_one()
+        branch_count = result.scalar_one()
         
         return {
             "bank_name": bank.name,
             "client_total_balance": total_balance,
             "comission_income": comission,
             "total_accounts": account_count,
-            "total_branches": braanch_count,
+            "total_branches": branch_count,
         }
+
+    async def add_comission_to_bank(self, bank_id: int, fee: Decimal):
+        bank = await self.get_bank(bank_id)
+        if bank is None:
+            raise ValueError("Bank not found")
+        
+        bank.comission_income += fee
+        
+        await self.session.commit()
