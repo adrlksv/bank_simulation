@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from enum import Enum
 
-from app.db.database import Base
+from db.database import Base
 
 
 class TransactionType(str, Enum):

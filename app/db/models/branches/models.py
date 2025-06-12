@@ -2,7 +2,7 @@ from decimal import Decimal
 from sqlalchemy import Integer, Numeric, ForeignKey, DECIMAL as SQLAlchemyDecimal
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.database import Base
+from db.database import Base
 
 
 class Branch(Base):
